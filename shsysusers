@@ -22,7 +22,17 @@ groups_cant_have() {
 	[ -n "$1" ] && [ "$1" != "-" ] && warn "Groups can't have a $1"
 }
 
+ifexists() {
+	local file
+	case "$1" in
+		user)  file="/etc/passwd" ;;
+		group) file="/etc/group"  ;;
+	esac
+	grep -q "^$2:" "$file"
+}
+
 process_dir() {
+	[ -d "$1" ] || return
 	find "$1" -maxdepth 1 -name '*.conf' | sort \
 	| while read -r file; do
 		num=0
@@ -40,6 +50,8 @@ process_dir() {
 
 			case "$type" in
 				u)
+					ifexists user "$name" && continue
+
 					IFS=":" read -r id group <<< "$id"
 
 					# shellcheck disable=SC2015
@@ -66,6 +78,8 @@ process_dir() {
 					"${cmd[@]}"
 					;;
 				g)
+					ifexists group "$name" && continue
+
 					# shellcheck disable=SC2015
 					name_check && id_check || continue
 
@@ -82,7 +96,10 @@ process_dir() {
 
 					"${cmd[@]}"
 					;;
-				m) usermod -a -G "$id" "$name" ;;
+				m)
+					grep -q "^$id:[^:]*:[^:]*:.*$name" "/etc/group" && continue
+					usermod -a -G "$id" "$name"
+					;;
 				r) warn "Type $type not implemented" ;;
 				*) warn "Unknown type $type" ;;
 			esac
