@@ -47,6 +47,8 @@ process_dir() {
 					{if(field) {printf $0 " "} else {print}}
 				'
 			)"
+			desc="${desc#\"}"
+			desc="${desc%\"}"
 
 			case "$type" in
 				u)
@@ -73,8 +75,10 @@ process_dir() {
 					[ -n "$id" ] && cmd+=(-u "$id")
 					[ -n "$group" ] && cmd+=(-g "$group")
 					[ -n "$desc" ] && cmd+=(-c "$desc")
+					ifexists group "$name" && cmd+=(-g "$name")
 					cmd+=("$name")
 
+					echo "${cmd[*]}"
 					"${cmd[@]}"
 					;;
 				g)
