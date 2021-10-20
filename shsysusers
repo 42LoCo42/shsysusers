@@ -111,6 +111,6 @@ process_dir() {
 	done
 }
 
-process_dir "/etc/sysusers.d"
-process_dir "/run/sysusers.d"
-process_dir "/usr/lib/sysusers.d"
+for d in /etc/sysusers.d /run/sysusers.d /usr/lib/sysusers.d; do
+	[ -d "$d" ] && process_dir "$d"
+done
